@@ -3,169 +3,205 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="中国語入力練習">
+<meta name="theme-color" content="#f7f8fa">
 <title>中国語入力練習</title>
+<script src="https://unpkg.com/pinyin-pro@3.12.0/dist/index.js"></script>
 <style>
-:root{--bg:#f7f7f5;--card:#fff;--text:#202124;--muted:#777;--line:#e4e4e4;--blue:#246bfe;--ok:#16834a;--ng:#d93025}
+:root{--blue:#356df3;--bg:#f7f8fa;--card:#fff;--text:#222;--muted:#73777f;--line:#e4e7ec;--ok:#168a4b;--bad:#c73535}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif}
-main{max-width:680px;margin:auto;padding:18px 16px 42px}
-h1{font-size:23px;margin:6px 0 4px}.sub{font-size:13px;color:var(--muted);margin-bottom:18px}
-.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:17px;margin:12px 0;box-shadow:0 2px 8px #00000008}
-.label{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:8px}
-textarea,input{width:100%;border:1px solid #ccc;border-radius:12px;padding:13px;font:inherit;outline:none;background:#fff}
-textarea:focus,input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #246bfe18}
-#jp{font-size:19px;min-height:90px}
-#userInput{font-size:21px;min-height:100px}
-.cn{font-size:29px;font-weight:750;line-height:1.45;margin:3px 0 4px}
-.py{font-size:15px;color:#666;line-height:1.6}
-button{border:0;border-radius:12px;padding:12px 15px;font-size:15px;font-weight:750;background:#202124;color:white;cursor:pointer}
-button.blue{background:var(--blue)}button.light{background:#eef1f6;color:#202124}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.row button{flex:1;min-width:130px}
-.note{font-size:12px;color:#888;line-height:1.55;margin-top:8px}
-.result{font-size:17px;font-weight:750;min-height:25px;margin-top:11px}.ok{color:var(--ok)}.ng{color:var(--ng)}
-.hint{background:#f1f4fa;border-radius:12px;padding:11px 12px;margin-top:10px;font-size:14px;line-height:1.7}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:30px;margin:0 0 4px;font-weight:800}
+.subtitle{color:var(--muted);font-size:15px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;margin:14px 0;box-shadow:0 2px 10px #00000008}
+.step{font-size:13px;font-weight:800;color:#686d75;margin-bottom:10px}
+textarea,input{width:100%;border:1px solid #cfd3da;border-radius:16px;background:#fff;font:inherit}
+textarea{padding:16px;font-size:18px;resize:vertical;min-height:110px}
+input{padding:13px;font-size:15px}
+button{border:0;border-radius:16px;padding:15px 18px;font-weight:800;font-size:16px;cursor:pointer}
+.primary{background:var(--blue);color:#fff;flex:1}
+.secondary{background:#edf0f4;color:#222;flex:1}
+.row{display:flex;gap:10px;margin-top:12px}
+.result{font-size:28px;line-height:1.5;font-weight:800;word-break:break-word}
+.pinyin{font-size:18px;color:#656a72;line-height:1.7;margin-top:4px}
+.answerBox{background:#f6f8ff;border-radius:16px;padding:16px;margin-top:14px}
+.small{font-size:13px;color:var(--muted);line-height:1.6}
+.sample{font-size:16px;line-height:1.9}
+.sample button{display:block;width:100%;text-align:left;background:transparent;padding:6px 0;border-radius:8px;font-weight:600}
+.practice textarea{min-height:100px}
+.status{margin-top:12px;padding:12px 14px;border-radius:14px;font-weight:700;display:none}
+.ok{background:#eaf8f0;color:var(--ok);display:block}
+.bad{background:#fff0f0;color:var(--bad);display:block}
 .hidden{display:none}
-hr{border:0;border-top:1px solid var(--line);margin:14px 0}
-#status{font-size:13px;color:var(--muted);margin-top:8px}
+details summary{cursor:pointer;font-weight:800}
+.config-note{background:#fff8e8;border:1px solid #f0d58c;padding:12px;border-radius:14px;font-size:13px;line-height:1.6;margin-top:12px}
+audio{width:100%;margin-top:12px}
+@media(max-width:520px){main{padding:18px 12px 40px}h1{font-size:27px}.result{font-size:24px}.row{flex-direction:column}}
 </style>
 </head>
 <body>
 <main>
-<h1>🇨🇳 中国語入力練習</h1>
-<div class="sub">自分が言いたい日本語を、中国語で「読める・打てる」にする練習</div>
+  <h1>🇨🇳 中国語入力練習</h1>
+  <div class="subtitle">自分が言いたい日本語を、中国語で「読める・打てる」にする練習</div>
 
-<section class="card">
-  <div class="label">STEP 1　言いたい日本語を入力</div>
-  <textarea id="jp" placeholder="例：また一緒に釣りに行こうね！"></textarea>
-  <div class="row">
-    <button class="blue" onclick="translate()">中国語にする</button>
-    <button class="light" onclick="clearAll()">クリア</button>
-  </div>
-  <div id="status"></div>
-  <div class="note">現在は試作品のため、下の「サンプル翻訳」に登録した文章だけ自動翻訳できます。次の段階でGoogle翻訳APIにつなげられます。</div>
-</section>
+  <section class="card">
+    <div class="step">STEP 1　言いたい日本語を入力</div>
+    <textarea id="ja" placeholder="例：また一緒に釣りに行こうね！">また一緒に釣りに行こうね！</textarea>
+    <div class="row">
+      <button class="primary" id="translateBtn">中国語にする</button>
+      <button class="secondary" id="clearBtn">クリア</button>
+    </div>
+    <div id="notice" class="small" style="margin-top:10px"></div>
+  </section>
 
-<section class="card hidden" id="answerCard">
-  <div class="label">STEP 2　中国語を確認</div>
-  <div id="cn" class="cn"></div>
-  <div id="py" class="py"></div>
-  <div class="row">
-    <button class="light" onclick="speak()">🔊 発音を聞く</button>
-    <button class="light" onclick="toggleAnswer()">中国語を隠す</button>
-  </div>
-</section>
+  <section class="card hidden" id="answerCard">
+    <div class="step">STEP 2　中国語を読む・聞く</div>
+    <div class="answerBox">
+      <div class="result" id="zh"></div>
+      <div class="pinyin" id="py"></div>
+      <button class="secondary" id="speakBtn" style="margin-top:12px;width:100%">🔊 発音を聞く</button>
+    </div>
+  </section>
 
-<section class="card hidden" id="practiceCard">
-  <div class="label">STEP 3　自分で中国語を入力</div>
-  <div class="note">iPhoneのキーボードを中国語に切り替えて、ピンインを入力→漢字候補を選んで文章を完成させてください。</div>
-  <textarea id="userInput" placeholder="ここに中国語を入力"></textarea>
-  <div class="row">
-    <button class="blue" onclick="check()">答え合わせ</button>
-    <button class="light" onclick="hint()">ヒント</button>
-  </div>
-  <div id="result" class="result"></div>
-  <div id="hint" class="hint hidden"></div>
-</section>
+  <section class="card hidden practice" id="practiceCard">
+    <div class="step">STEP 3　中国語キーボードで自分で打つ</div>
+    <div class="small">上の中国語を見ながら、iPhoneの中国語キーボードで入力してみよう。</div>
+    <textarea id="typed" placeholder="ここに中国語を入力"></textarea>
+    <div class="row">
+      <button class="primary" id="checkBtn">答え合わせ</button>
+      <button class="secondary" id="hideAnswerBtn">答えを隠す</button>
+    </div>
+    <div id="checkStatus" class="status"></div>
+    <div id="diff" class="small" style="margin-top:10px"></div>
+  </section>
 
-<section class="card">
-  <div class="label">サンプル翻訳</div>
-  <div class="note">自由入力の練習用。文章を自分で入力して「中国語にする」を押してみてください。</div>
-  <div style="margin-top:10px;font-size:14px;line-height:1.9">
-    ・また一緒に釣りに行こうね！<br>
-    ・今日は全然釣れなかったけど、楽しかった。<br>
-    ・今日はコンディションが悪かったね。<br>
-    ・また女子だけで釣りに行こう！
-  </div>
-</section>
+  <section class="card">
+    <div class="step">サンプル</div>
+    <div class="sample">
+      <button data-sample="また一緒に釣りに行こうね！">・また一緒に釣りに行こうね！</button>
+      <button data-sample="今日は全然釣れなかったけど、楽しかった。">・今日は全然釣れなかったけど、楽しかった。</button>
+      <button data-sample="今日はコンディションが悪かったね。">・今日はコンディションが悪かったね。</button>
+      <button data-sample="また女子だけで釣りに行こう！">・また女子だけで釣りに行こう！</button>
+    </div>
+  </section>
 
-<section class="card">
-  <div class="label">このアプリの完成イメージ</div>
-  <div class="note">
-    日本語を自由入力<br>
-    ↓<br>
-    自動で自然な中国語に翻訳<br>
-    ↓<br>
-    中国語＋ピンイン＋発音<br>
-    ↓<br>
-    自分で中国語キーボード入力<br>
-    ↓<br>
-    正誤判定・間違い部分の確認
-  </div>
-</section>
+  <section class="card">
+    <details>
+      <summary>⚙️ 翻訳サーバーの接続設定</summary>
+      <p class="small">Google Apps Scriptで作った翻訳サーバーのURLをここに一度だけ貼ると、自由入力が使えるようになります。このURLはiPhone内に保存されます。</p>
+      <input id="apiUrl" placeholder="https://script.google.com/macros/s/........../exec">
+      <div class="row">
+        <button class="primary" id="saveApiBtn">保存して接続</button>
+        <button class="secondary" id="clearApiBtn">接続を消す</button>
+      </div>
+      <div class="config-note">この試作品はJSONPで翻訳結果を受け取ります。個人情報や機密情報は入力しないでください。製品版では、Google Cloud Translationなどをサーバー側から安全に呼ぶ構成へ移行します。</div>
+    </details>
+  </section>
 </main>
 
 <script>
-const samples=[
- {jp:"また一緒に釣りに行こうね！",cn:"下次再一起去钓鱼吧！",py:"xià cì zài yìqǐ qù diàoyú ba"},
- {jp:"今日は全然釣れなかったけど、楽しかった。",cn:"今天完全没钓到鱼，但是很开心。",py:"jīntiān wánquán méi diào dào yú, dànshì hěn kāixīn"},
- {jp:"今日はコンディションが悪かったね。",cn:"今天的情况不太好呢。",py:"jīntiān de qíngkuàng bú tài hǎo ne"},
- {jp:"また女子だけで釣りに行こう！",cn:"下次我们女生再一起去钓鱼吧！",py:"xià cì wǒmen nǚshēng zài yìqǐ qù diàoyú ba"}
-];
-let current=null,answerHidden=false;
+const $ = id => document.getElementById(id);
+let currentZh = "";
+let apiUrl = localStorage.getItem("chineseTrainingApiUrl") || "";
+$("apiUrl").value = apiUrl;
 
-function translate(){
- const text=document.getElementById("jp").value.trim();
- const status=document.getElementById("status");
- if(!text){status.textContent="まず日本語を入力してください。";return}
- const hit=samples.find(x=>x.jp===text);
- if(!hit){
-   current=null;
-   document.getElementById("answerCard").classList.add("hidden");
-   document.getElementById("practiceCard").classList.add("hidden");
-   status.textContent="この文章はまだ翻訳データにありません。次の段階でGoogle翻訳APIを接続すると、自由入力に対応できます。";
-   return;
- }
- current=hit;answerHidden=false;
- document.getElementById("cn").textContent=hit.cn;
- document.getElementById("py").textContent=hit.py;
- document.getElementById("answerCard").classList.remove("hidden");
- document.getElementById("practiceCard").classList.remove("hidden");
- document.getElementById("userInput").value="";
- document.getElementById("result").textContent="";
- document.getElementById("result").className="result";
- document.getElementById("hint").classList.add("hidden");
- status.textContent="翻訳しました。下で中国語入力を練習できます。";
+const samples = {
+  "また一緒に釣りに行こうね！":"下次再一起去钓鱼吧！",
+  "今日は全然釣れなかったけど、楽しかった。":"今天完全没钓到鱼，但是很开心。",
+  "今日はコンディションが悪かったね。":"今天的情况不太好呢。",
+  "また女子だけで釣りに行こう！":"下次我们女生再一起去钓鱼吧！"
+};
+
+function normalize(s){
+  return s.replace(/\s+/g,"").replace(/[。！!？?，,、]/g,"").trim();
 }
-function toggleAnswer(){
- if(!current)return;
- answerHidden=!answerHidden;
- document.getElementById("cn").textContent=answerHidden?"？？？":current.cn;
- document.getElementById("py").textContent=answerHidden?"ピンインも隠しています":current.py;
+function showResult(zh){
+  currentZh=zh;
+  $("zh").textContent=zh;
+  $("py").textContent = window.pinyinPro ? pinyinPro.pinyin(zh,{toneType:"symbol"}) : "ピンイン表示には通信が必要です";
+  $("answerCard").classList.remove("hidden");
+  $("practiceCard").classList.remove("hidden");
+  $("typed").value="";
+  $("checkStatus").className="status";
+  $("checkStatus").textContent="";
+  $("diff").textContent="";
+  $("practiceCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
-function check(){
- if(!current)return;
- const u=document.getElementById("userInput").value.trim();
- const r=document.getElementById("result");
- if(!u){r.textContent="中国語を入力してみてね。";r.className="result ng";return}
- if(u===current.cn){r.textContent="⭕ 正解！";r.className="result ok"}
- else{
-   r.textContent="❌ まだ違うよ。もう一度見比べてみよう。";
-   r.className="result ng";
- }
+function fallbackOrTranslate(text){
+  if(samples[text]) return Promise.resolve(samples[text]);
+  if(!apiUrl) return Promise.reject(new Error("翻訳サーバー未接続"));
+  return new Promise((resolve,reject)=>{
+    const callback="cb_"+Date.now()+"_"+Math.floor(Math.random()*100000);
+    const script=document.createElement("script");
+    let timer=setTimeout(()=>{cleanup();reject(new Error("翻訳サーバーから応答がありません"))},15000);
+    window[callback]=(data)=>{
+      cleanup();
+      if(data && data.ok && data.chinese) resolve(data.chinese);
+      else reject(new Error((data&&data.error)||"翻訳に失敗しました"));
+    };
+    function cleanup(){clearTimeout(timer);delete window[callback];script.remove();}
+    script.onerror=()=>{cleanup();reject(new Error("翻訳サーバーに接続できません"))};
+    script.src=apiUrl + (apiUrl.includes("?")?"&":"?") + "text="+encodeURIComponent(text)+"&callback="+encodeURIComponent(callback);
+    document.body.appendChild(script);
+  });
 }
-function hint(){
- if(!current)return;
- const h=document.getElementById("hint");
- h.innerHTML="ピンイン：<b>"+current.py+"</b><br>ヒントを見たら、もう一度自分で入力してみよう。";
- h.classList.remove("hidden");
-}
-function speak(){
- if(!current)return;
- if("speechSynthesis" in window){
-   const u=new SpeechSynthesisUtterance(current.cn);
-   u.lang="zh-CN"; speechSynthesis.cancel(); speechSynthesis.speak(u);
- }else alert("このブラウザでは音声再生に対応していません。");
-}
-function clearAll(){
- document.getElementById("jp").value="";
- document.getElementById("userInput").value="";
- document.getElementById("answerCard").classList.add("hidden");
- document.getElementById("practiceCard").classList.add("hidden");
- document.getElementById("status").textContent="";
- current=null;
-}
+$("translateBtn").onclick=async()=>{
+  const text=$("ja").value.trim();
+  if(!text){$("notice").textContent="日本語を入力してください。";return;}
+  $("translateBtn").disabled=true;
+  $("translateBtn").textContent="翻訳中…";
+  $("notice").textContent="";
+  try{
+    const zh=await fallbackOrTranslate(text);
+    showResult(zh);
+    $("notice").textContent = samples[text] ? "サンプル翻訳を使用しました。" : "自動翻訳しました。";
+  }catch(e){
+    $("notice").textContent="この文章は今の状態では翻訳できません。下の「翻訳サーバーの接続設定」を一度設定してください。";
+  }finally{
+    $("translateBtn").disabled=false;
+    $("translateBtn").textContent="中国語にする";
+  }
+};
+$("clearBtn").onclick=()=>{
+  $("ja").value="";$("answerCard").classList.add("hidden");$("practiceCard").classList.add("hidden");$("notice").textContent="";
+};
+$("checkBtn").onclick=()=>{
+  const typed=normalize($("typed").value);
+  const answer=normalize(currentZh);
+  if(typed===answer){
+    $("checkStatus").className="status ok";
+    $("checkStatus").textContent="🎉 正解！その中国語でOK。";
+    $("diff").textContent="";
+  }else{
+    $("checkStatus").className="status bad";
+    $("checkStatus").textContent="もう一度！漢字を見比べてみよう。";
+    $("diff").innerHTML="正解：<b>"+currentZh+"</b>";
+  }
+};
+$("hideAnswerBtn").onclick=()=>{
+  const z=$("zh"), p=$("py");
+  const hidden=z.dataset.hidden==="1";
+  if(hidden){z.textContent=currentZh;p.textContent=pinyinPro.pinyin(currentZh,{toneType:"symbol"});z.dataset.hidden="0";$("hideAnswerBtn").textContent="答えを隠す";}
+  else{z.textContent="••••••";p.textContent="••••••";z.dataset.hidden="1";$("hideAnswerBtn").textContent="答えを表示";}
+};
+$("speakBtn").onclick=()=>{
+  if(!currentZh || !("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(currentZh);
+  u.lang="zh-CN";u.rate=0.8;
+  speechSynthesis.speak(u);
+};
+document.querySelectorAll("[data-sample]").forEach(b=>b.onclick=()=>{
+  $("ja").value=b.dataset.sample;
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("saveApiBtn").onclick=()=>{
+  const u=$("apiUrl").value.trim().replace(/\/$/,"");
+  if(!u){alert("URLを入力してください");return;}
+  localStorage.setItem("chineseTrainingApiUrl",u);apiUrl=u;
+  alert("保存しました。自由入力の翻訳を試せます。");
+};
+$("clearApiBtn").onclick=()=>{localStorage.removeItem("chineseTrainingApiUrl");apiUrl="";$("apiUrl").value="";alert("接続設定を消しました。");};
 </script>
 </body>
 </html>
