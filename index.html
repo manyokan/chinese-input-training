@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="中国語入力練習">
+<title>中国語入力練習</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--text:#202124;--muted:#777;--line:#e4e4e4;--blue:#246bfe;--ok:#16834a;--ng:#d93025}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif}
+main{max-width:680px;margin:auto;padding:18px 16px 42px}
+h1{font-size:23px;margin:6px 0 4px}.sub{font-size:13px;color:var(--muted);margin-bottom:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:17px;margin:12px 0;box-shadow:0 2px 8px #00000008}
+.label{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:8px}
+textarea,input{width:100%;border:1px solid #ccc;border-radius:12px;padding:13px;font:inherit;outline:none;background:#fff}
+textarea:focus,input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #246bfe18}
+#jp{font-size:19px;min-height:90px}
+#userInput{font-size:21px;min-height:100px}
+.cn{font-size:29px;font-weight:750;line-height:1.45;margin:3px 0 4px}
+.py{font-size:15px;color:#666;line-height:1.6}
+button{border:0;border-radius:12px;padding:12px 15px;font-size:15px;font-weight:750;background:#202124;color:white;cursor:pointer}
+button.blue{background:var(--blue)}button.light{background:#eef1f6;color:#202124}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.row button{flex:1;min-width:130px}
+.note{font-size:12px;color:#888;line-height:1.55;margin-top:8px}
+.result{font-size:17px;font-weight:750;min-height:25px;margin-top:11px}.ok{color:var(--ok)}.ng{color:var(--ng)}
+.hint{background:#f1f4fa;border-radius:12px;padding:11px 12px;margin-top:10px;font-size:14px;line-height:1.7}
+.hidden{display:none}
+hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+#status{font-size:13px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<main>
+<h1>🇨🇳 中国語入力練習</h1>
+<div class="sub">自分が言いたい日本語を、中国語で「読める・打てる」にする練習</div>
+
+<section class="card">
+  <div class="label">STEP 1　言いたい日本語を入力</div>
+  <textarea id="jp" placeholder="例：また一緒に釣りに行こうね！"></textarea>
+  <div class="row">
+    <button class="blue" onclick="translate()">中国語にする</button>
+    <button class="light" onclick="clearAll()">クリア</button>
+  </div>
+  <div id="status"></div>
+  <div class="note">現在は試作品のため、下の「サンプル翻訳」に登録した文章だけ自動翻訳できます。次の段階でGoogle翻訳APIにつなげられます。</div>
+</section>
+
+<section class="card hidden" id="answerCard">
+  <div class="label">STEP 2　中国語を確認</div>
+  <div id="cn" class="cn"></div>
+  <div id="py" class="py"></div>
+  <div class="row">
+    <button class="light" onclick="speak()">🔊 発音を聞く</button>
+    <button class="light" onclick="toggleAnswer()">中国語を隠す</button>
+  </div>
+</section>
+
+<section class="card hidden" id="practiceCard">
+  <div class="label">STEP 3　自分で中国語を入力</div>
+  <div class="note">iPhoneのキーボードを中国語に切り替えて、ピンインを入力→漢字候補を選んで文章を完成させてください。</div>
+  <textarea id="userInput" placeholder="ここに中国語を入力"></textarea>
+  <div class="row">
+    <button class="blue" onclick="check()">答え合わせ</button>
+    <button class="light" onclick="hint()">ヒント</button>
+  </div>
+  <div id="result" class="result"></div>
+  <div id="hint" class="hint hidden"></div>
+</section>
+
+<section class="card">
+  <div class="label">サンプル翻訳</div>
+  <div class="note">自由入力の練習用。文章を自分で入力して「中国語にする」を押してみてください。</div>
+  <div style="margin-top:10px;font-size:14px;line-height:1.9">
+    ・また一緒に釣りに行こうね！<br>
+    ・今日は全然釣れなかったけど、楽しかった。<br>
+    ・今日はコンディションが悪かったね。<br>
+    ・また女子だけで釣りに行こう！
+  </div>
+</section>
+
+<section class="card">
+  <div class="label">このアプリの完成イメージ</div>
+  <div class="note">
+    日本語を自由入力<br>
+    ↓<br>
+    自動で自然な中国語に翻訳<br>
+    ↓<br>
+    中国語＋ピンイン＋発音<br>
+    ↓<br>
+    自分で中国語キーボード入力<br>
+    ↓<br>
+    正誤判定・間違い部分の確認
+  </div>
+</section>
+</main>
+
+<script>
+const samples=[
+ {jp:"また一緒に釣りに行こうね！",cn:"下次再一起去钓鱼吧！",py:"xià cì zài yìqǐ qù diàoyú ba"},
+ {jp:"今日は全然釣れなかったけど、楽しかった。",cn:"今天完全没钓到鱼，但是很开心。",py:"jīntiān wánquán méi diào dào yú, dànshì hěn kāixīn"},
+ {jp:"今日はコンディションが悪かったね。",cn:"今天的情况不太好呢。",py:"jīntiān de qíngkuàng bú tài hǎo ne"},
+ {jp:"また女子だけで釣りに行こう！",cn:"下次我们女生再一起去钓鱼吧！",py:"xià cì wǒmen nǚshēng zài yìqǐ qù diàoyú ba"}
+];
+let current=null,answerHidden=false;
+
+function translate(){
+ const text=document.getElementById("jp").value.trim();
+ const status=document.getElementById("status");
+ if(!text){status.textContent="まず日本語を入力してください。";return}
+ const hit=samples.find(x=>x.jp===text);
+ if(!hit){
+   current=null;
+   document.getElementById("answerCard").classList.add("hidden");
+   document.getElementById("practiceCard").classList.add("hidden");
+   status.textContent="この文章はまだ翻訳データにありません。次の段階でGoogle翻訳APIを接続すると、自由入力に対応できます。";
+   return;
+ }
+ current=hit;answerHidden=false;
+ document.getElementById("cn").textContent=hit.cn;
+ document.getElementById("py").textContent=hit.py;
+ document.getElementById("answerCard").classList.remove("hidden");
+ document.getElementById("practiceCard").classList.remove("hidden");
+ document.getElementById("userInput").value="";
+ document.getElementById("result").textContent="";
+ document.getElementById("result").className="result";
+ document.getElementById("hint").classList.add("hidden");
+ status.textContent="翻訳しました。下で中国語入力を練習できます。";
+}
+function toggleAnswer(){
+ if(!current)return;
+ answerHidden=!answerHidden;
+ document.getElementById("cn").textContent=answerHidden?"？？？":current.cn;
+ document.getElementById("py").textContent=answerHidden?"ピンインも隠しています":current.py;
+}
+function check(){
+ if(!current)return;
+ const u=document.getElementById("userInput").value.trim();
+ const r=document.getElementById("result");
+ if(!u){r.textContent="中国語を入力してみてね。";r.className="result ng";return}
+ if(u===current.cn){r.textContent="⭕ 正解！";r.className="result ok"}
+ else{
+   r.textContent="❌ まだ違うよ。もう一度見比べてみよう。";
+   r.className="result ng";
+ }
+}
+function hint(){
+ if(!current)return;
+ const h=document.getElementById("hint");
+ h.innerHTML="ピンイン：<b>"+current.py+"</b><br>ヒントを見たら、もう一度自分で入力してみよう。";
+ h.classList.remove("hidden");
+}
+function speak(){
+ if(!current)return;
+ if("speechSynthesis" in window){
+   const u=new SpeechSynthesisUtterance(current.cn);
+   u.lang="zh-CN"; speechSynthesis.cancel(); speechSynthesis.speak(u);
+ }else alert("このブラウザでは音声再生に対応していません。");
+}
+function clearAll(){
+ document.getElementById("jp").value="";
+ document.getElementById("userInput").value="";
+ document.getElementById("answerCard").classList.add("hidden");
+ document.getElementById("practiceCard").classList.add("hidden");
+ document.getElementById("status").textContent="";
+ current=null;
+}
+</script>
+</body>
+</html>
